@@ -1,0 +1,46 @@
+import pandas as pd
+from config import (
+    STOCKHOLM_MONTHLY_PRICES_EUR, STOCKHOLM_MONTHLY_RETURNS,
+    STOCKHOLM_WEEKLY_PRICES, STOCKHOLM_WEEKLY_RETURNS
+)
+
+
+def calculate_returns(prices_df, output_path):
+    returns_df = prices_df.copy()
+    
+    for col in prices_df.columns:
+        if col == 'date':
+            continue
+        returns_df[col] = prices_df[col].pct_change() * 100
+    
+    returns_df.to_excel(output_path, index=False)
+    return returns_df
+
+
+def calculate_monthly_returns():
+    prices_df = pd.read_excel(STOCKHOLM_MONTHLY_PRICES_EUR)
+    return calculate_returns(prices_df, STOCKHOLM_MONTHLY_RETURNS)
+
+
+def calculate_weekly_returns():
+    prices_df = pd.read_excel(STOCKHOLM_WEEKLY_PRICES)
+    returns_df = pd.DataFrame(columns=prices_df.columns)
+    returns_df['date'] = prices_df['date']
+    
+    for col in prices_df.columns:
+        if col == 'date':
+            continue
+        returns_df[col] = prices_df[col].pct_change() * 100
+    
+    returns_df.to_excel(STOCKHOLM_WEEKLY_RETURNS, index=False)
+    return returns_df
+
+
+if __name__ == "__main__":
+    print("Calculating monthly returns...")
+    monthly = calculate_monthly_returns()
+    print(f"Monthly returns: {monthly.shape}")
+    
+    print("Calculating weekly returns...")
+    weekly = calculate_weekly_returns()
+    print(f"Weekly returns: {weekly.shape}")
