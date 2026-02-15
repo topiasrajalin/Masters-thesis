@@ -46,3 +46,8 @@ Thumbs.db
 *.log
 
 src/ETL/config.py
+# Data and results directories
+data/raw/
+data/processed/
+results/
+!results/.gitkeep
