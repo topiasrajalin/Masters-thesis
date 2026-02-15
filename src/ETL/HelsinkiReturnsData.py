@@ -1,5 +1,5 @@
 import pandas as pd
-from config import MONTHLY_PRICES, MONTHLY_RETURNS, WEEKLY_PRICES, WEEKLY_RETURNS
+from config import HELSINKI_MONTHLY_PRICES, HELSINKI_MONTHLY_RETURNS, HELSINKI_WEEKLY_PRICES, HELSINKI_WEEKLY_RETURNS
 
 
 def calculate_returns(prices_df, output_path):
@@ -15,13 +15,13 @@ def calculate_returns(prices_df, output_path):
 
 
 def calculate_monthly_returns():
-    prices_df = pd.read_excel(MONTHLY_PRICES)
-    return calculate_returns(prices_df, MONTHLY_RETURNS)
+    prices_df = pd.read_excel(HELSINKI_MONTHLY_PRICES)
+    return calculate_returns(prices_df, HELSINKI_MONTHLY_RETURNS)
 
 
 def calculate_weekly_returns():
-    prices_df = pd.read_excel(WEEKLY_PRICES)
-    return calculate_returns(prices_df, WEEKLY_RETURNS)
+    prices_df = pd.read_excel(HELSINKI_WEEKLY_PRICES)
+    return calculate_returns(prices_df, HELSINKI_WEEKLY_RETURNS)
 
 
 if __name__ == "__main__":

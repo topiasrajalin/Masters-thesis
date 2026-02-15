@@ -1,15 +1,16 @@
 import pandas as pd
 from config import (
-    HELSINKI_MV, HELSINKI_FIRST_NORTH, HELSINKI_FINANCIALS, BANKS_DUPLICATES,
-    HELSINKI_MONTHLY_PRICES, HELSINKI_WEEKLY_PRICES, HELSINKI_OUTPUT_MV
+    STOCKHOLM_MV, STOCKHOLM_MV_EUR, STOCKHOLM_MONTHLY_PRICES, STOCKHOLM_MONTHLY_PRICES_EUR,
+    STOCKHOLM_WEEKLY_PRICES, STOCKHOLM_FIRST_NORTH, STOCKHOLM_FINANCIALS, BANKS_DUPLICATES,
+    EXCHANGE_RATES
 )
 
 
 def load_exclusion_lists():
-    fn_df = pd.read_excel(HELSINKI_FIRST_NORTH)
+    fn_df = pd.read_excel(STOCKHOLM_FIRST_NORTH)
     fn_list = set(x.upper() for x in fn_df['yhtiö'])
     
-    fin_df = pd.read_excel(HELSINKI_FINANCIALS)
+    fin_df = pd.read_excel(STOCKHOLM_FINANCIALS)
     fin_list = set(x.upper() for x in fin_df['yhtiö'])
     
     banks_df = pd.read_excel(BANKS_DUPLICATES)
@@ -31,8 +32,17 @@ def should_exclude_stock(col_name, fn_list, fin_list, banks_list):
     return False
 
 
+def convert_to_eur(df, currency_col='SEK/EUR'):
+    for col in df.columns:
+        if col in ('date', 'SEK/EUR', 'NOK/EUR', 'DKK/EUR'):
+            continue
+        df[col] = df[col] * df[currency_col]
+    
+    return df.drop(columns=['SEK/EUR', 'NOK/EUR', 'DKK/EUR'])
+
+
 def filter_market_value_data():
-    df = pd.read_excel(HELSINKI_MV)
+    df = pd.read_excel(STOCKHOLM_MV)
     fn_list, fin_list, banks_list = load_exclusion_lists()
     
     cols_to_keep = [col for col in df.columns 
@@ -40,8 +50,12 @@ def filter_market_value_data():
                     df[col].nunique() > 20]
     
     df = df[[col for col in cols_to_keep if col == 'date' or df[col].max() >= 10]]
-    df.to_excel(HELSINKI_OUTPUT_MV, index=False)
     
+    rates = pd.read_excel(EXCHANGE_RATES)
+    df = df.merge(rates, on='date')
+    df = convert_to_eur(df)
+    
+    df.to_excel(STOCKHOLM_MV_EUR, index=False)
     return df
 
 
@@ -59,35 +73,50 @@ def remove_stale_prices(df, offset_indices):
 
 
 def process_monthly_prices():
-    mv_df = pd.read_excel(HELSINKI_OUTPUT_MV)
+    mv_df = pd.read_excel(STOCKHOLM_MV_EUR)
     company_list = [str(col).split(' - MARKET VALUE')[0] for col in mv_df.columns]
     
-    df = pd.read_excel(HELSINKI_MONTHLY_PRICES)
-    df = df[[col for col in df.columns if col in company_list]]
+    df = pd.read_excel(STOCKHOLM_MONTHLY_PRICES)
+    df = df[[col for col in df.columns if col in company_list or 
+             col in ['SEMCON DEAD - DELIST.23/11/22', 'TCT TECH SWEDEN DEAD - DELIST.23/11/22']]]
     df = remove_stale_prices(df, [1, 2, 3, 5])
     
-    df.to_excel(HELSINKI_MONTHLY_PRICES, index=False)
+    rates = pd.read_excel(EXCHANGE_RATES)
+    df = df.merge(rates, on='date')
+    df = convert_to_eur(df)
+    
+    df.to_excel(STOCKHOLM_MONTHLY_PRICES_EUR, index=False)
+    
+    prices_df = pd.read_excel(STOCKHOLM_MONTHLY_PRICES)
+    prices_df = prices_df[[col for col in prices_df.columns if col in company_list or 
+                           col in ['SEMCON DEAD - DELIST.23/11/22', 'TCT TECH SWEDEN DEAD - DELIST.23/11/22']]]
+    prices_df = remove_stale_prices(prices_df, [1, 2, 3, 5])
+    prices_df.to_excel(STOCKHOLM_MONTHLY_PRICES, index=False)
+    
     return df
 
 
 def process_weekly_prices():
-    monthly_df = pd.read_excel(HELSINKI_MONTHLY_PRICES)
+    monthly_df = pd.read_excel(STOCKHOLM_MONTHLY_PRICES)
     company_list = monthly_df.columns.tolist()
     
-    df = pd.read_excel(HELSINKI_WEEKLY_PRICES)
+    df = pd.read_excel(STOCKHOLM_WEEKLY_PRICES)
     df = df[[col for col in df.columns if col in company_list]]
     df = remove_stale_prices(df, [1, 2, 5, 8, 12, 16, 18, 21])
     
-    df.to_excel(HELSINKI_WEEKLY_PRICES, index=False)
+    df.to_excel(STOCKHOLM_WEEKLY_PRICES, index=False)
     return df
 
 
 if __name__ == "__main__":
+    print("Filtering market value data...")
     mv_data = filter_market_value_data()
     print(f"Market value: {mv_data.shape}")
     
+    print("Processing monthly prices...")
     monthly = process_monthly_prices()
     print(f"Monthly prices: {monthly.shape}")
     
+    print("Processing weekly prices...")
     weekly = process_weekly_prices()
     print(f"Weekly prices: {weekly.shape}")
