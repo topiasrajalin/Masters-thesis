@@ -2,6 +2,11 @@
 
 Comprehensive analysis of investment strategies across Nordic stock exchanges (Copenhagen, Helsinki, Oslo, Stockholm) using Python data processing and MATLAB financial analysis.
 
+## Publications
+
+- **Master's Thesis**: [Combining idiosyncratic volatility and momentum - Evidence from the Nordic stock markets](https://osuva.uwasa.fi/server/api/core/bitstreams/c4d64a78-d1c1-43d9-9f83-442f08f9dfad/content)
+- **Published Article**: [Combining low-volatility and momentum: recent evidence from the Nordic equities](https://doi.org/10.1080/00036846.2024.2337806)
+
 ## Project Structure
 
 ```
